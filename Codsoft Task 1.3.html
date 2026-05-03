@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            padding: 20px;
+        }
+
+        .calculator {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calculator::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #ff9ff3);
+        }
+
+        .display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 25px 20px;
+            margin-bottom: 25px;
+            text-align: right;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .display input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            width: 100%;
+            outline: none;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .display .previous-operand {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-weight: 400;
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        button {
+            height: 70px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-number {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-number:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-operator {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .btn-operator:hover {
+            background: linear-gradient(135deg, #ff5252, #d32f2f);
+            transform: translateY(-2px);
+        }
+
+        .btn-equals {
+            background: linear-gradient(135deg, #4ecdc4, #26de81);
+            color: white;
+            font-weight: 700;
+            font-size: 1.6rem;
+            grid-column: span 2;
+        }
+
+        .btn-equals:hover {
+            background: linear-gradient(135deg, #26de81, #20bf6b);
+            transform: translateY(-2px);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: #333;
+            font-weight: 700;
+            grid-column: span 2;
+        }
+
+        .btn-clear:hover {
+            background: linear-gradient(135deg, #ff9ff3, #feca57);
+            transform: translateY(-2px);
+        }
+
+        .btn-backspace {
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            color: #333;
+            font-weight: 600;
+        }
+
+        .btn-backspace:hover {
+            background: linear-gradient(135deg, #fed6e3, #a8edea);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .calculator {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            button {
+                height: 60px;
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Shake animation for errors */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="previous-operand" id="previousOperand"></div>
+            <input type="text" id="display" readonly value="0" maxlength="20">
+        </div>
+        
+        <div class="buttons-grid">
+            <button class="btn-clear" onclick="clearAll()">
+                <i class="fas fa-trash-alt"></i> Clear
+            </button>
+            <button class="btn-backspace" onclick="deleteLast()">
+                <i class="fas fa-backspace"></i>
+            </button>
+            <button class="btn-operator" onclick="appendToDisplay('/')">÷</button>
+            <button class="btn-number" onclick="appendToDisplay('7')">7</button>
+            <button class="btn-number" onclick="appendToDisplay('8')">8</button>
+            <button class="btn-number" onclick="appendToDisplay('9')">9</button>
+            <button class="btn-operator" onclick="appendToDisplay('*')">×</button>
+            <button class="btn-number" onclick="appendToDisplay('4')">4</button>
+            <button class="btn-number" onclick="appendToDisplay('5')">5</button>
+            <button class="btn-number" onclick="appendToDisplay('6')">6</button>
+            <button class="btn-operator" onclick="appendToDisplay('-')">-</button>
+            <button class="btn-number" onclick="appendToDisplay('1')">1</button>
+            <button class="btn-number" onclick="appendToDisplay('2')">2</button>
+            <button class="btn-number" onclick="appendToDisplay('3')">3</button>
+            <button class="btn-operator" onclick="appendToDisplay('+')">+</button>
+            <button class="btn-number" onclick="appendToDisplay('0')" style="grid-column: span 2;">0</button>
+            <button class="btn-number" onclick="appendToDisplay('.')">.</button>
+            <button class="btn-equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let previousOperand = document.getElementById('previousOperand');
+        let currentInput = '0';
+        let previousInput = '0';
+        let operator = null;
+        let waitingForNewInput = false;
+
+        function updateDisplay() {
+            display.value = currentInput;
+        }
+
+        function appendToDisplay(value) {
+            if (waitingForNewInput) {
+                currentInput = value;
+                waitingForNewInput = false;
+            } else {
+                if (currentInput === '0' && value !== '.') {
+                    currentInput = value;
+                } else {
+                    currentInput += value;
+                }
+            }
+            updateDisplay();
+        }
+
+        function clearAll() {
+            currentInput = '0';
+            previousInput = '0';
+            operator = null;
+            waitingForNewInput = false;
+            previousOperand.textContent = '';
+            updateDisplay();
+        }
+
+        function deleteLast() {
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        function calculate() {
+            let result;
+            
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            if (isNaN(prev) || isNaN(current)) return;
+
+            switch (operator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        shakeDisplay();
+                        return;
+                    }
+                    result = prev / current;
+                    break;
+                default:
+                    return;
+            }
+
+            // Format result to avoid floating point issues
+            result = Math.round(result * 100000000) / 100000000;
+
+            previousOperand.textContent = `${previousInput} ${operator} ${currentInput} =`;
+            currentInput = result.toString();
+            operator = null;
+            waitingForNewInput = true;
+            updateDisplay();
+        }
+
+        function inputOperator(nextOperator) {
+            const inputValue = parseFloat(currentInput);
+
+            if (operator && waitingForNewInput) {
+                operator = nextOperator;
+                return;
+            }
+
+            if (previousInput === '0') {
+                previousInput = currentInput;
+            } else if (operator) {
+                const current = parseFloat(currentInput);
+                if (isNaN(current)) return;
+                
+                switch (operator) {
+                    case '+': previousInput = (parseFloat(previousInput) + current).toString(); break;
+                    case '-': previousInput = (parseFloat(previousInput) - current).toString(); break;
+                    case '*': previousInput = (parseFloat(previousInput) * current).toString(); break;
+                    case '/': 
+                        if (current === 0) {
+                            shakeDisplay();
+                            return;
+                        }
+                        previousInput = (parseFloat(previousInput) / current).toString(); break;
+                }
+            } else {
+                previousInput = currentInput;
+            }
+
+            waitingForNewInput = true;
+            operator = nextOperator;
+            previousOperand.textContent = previousInput + ' ' + operator;
+        }
+
+        // Override number buttons to handle operators
+        document.querySelectorAll('.btn-operator').forEach(btn => {
+            btn.addEventListener('click', function() {
+                inputOperator(this.textContent === '÷' ? '/' : this.textContent);
+            });
+        });
+
+        function shakeDisplay() {
+            display.parentElement.classList.add('shake');
+            setTimeout(() => {
+                display.parentElement.classList.remove('shake');
+            }, 500);
+            
+            // Show error briefly
+            const originalValue = currentInput;
+            currentInput = 'Error';
+            updateDisplay();
+            setTimeout(() => {
+                currentInput = originalValue;
+                updateDisplay();
+            }, 1000);
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            
+            if (key >= '0' && key <= '9' || key === '.') {
+                appendToDisplay(key);
+            } else if (key === '+' || key === '-') {
+                inputOperator(key);
+            } else if (key === '*') {
+                inputOperator('*');
+            } else if (key === '/') {
+                inputOperator('/');
+            } else if (key === 'Enter' || key === '=') {
+                calculate();
+            } else if (key === 'Escape' || key === 'c' || key === 'C') {
+                clearAll();
+            } else if (key === 'Backspace') {
+                deleteLast();
+            }
+        });
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>
